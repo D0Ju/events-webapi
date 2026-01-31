@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using events_webapi.Models;
+using events_webapi.Services;
 
 namespace events_webapi.Controllers
 {
@@ -13,95 +14,75 @@ namespace events_webapi.Controllers
     [ApiController]
     public class EventsController : ControllerBase
     {
-        private readonly AppdbContext _context;
+        private readonly IEventApiService _service;
 
-        public EventsController(AppdbContext context)
+        public EventsController(IEventApiService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/Events
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Event>>> GetEvent()
         {
-            return await _context.Event.ToListAsync();
+            var events = await _service.GetAllAsync();
+            return Ok(events);
         }
 
         // GET: api/Events/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Event>> GetEvent(int id)
         {
-            var @event = await _context.Event.FindAsync(id);
+            var e = await _service.GetByIdAsync(id);
+            if (e == null) return NotFound();
+            return Ok(e);
+        }
 
-            if (@event == null)
-            {
-                return NotFound();
-            }
+        // GET: api/Events/filter
+        [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<Event>>> Filter(
+            [FromQuery] string? naziv,
+            [FromQuery] string? lokacija,
+            [FromQuery] DateTime? datumOd,
+            [FromQuery] DateTime? datumDo,
+            [FromQuery] int? vrstaId,
+            [FromQuery] bool? aktivan)
+        {
+            var result = await _service.FilterAsync(
+                naziv,
+                lokacija,
+                datumOd,
+                datumDo,
+                vrstaId,
+                aktivan);
 
-            return @event;
+            return Ok(result);
         }
 
         // PUT: api/Events/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEvent(int id, Event @event)
         {
-            if (id != @event.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(@event).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!EventExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
+            var ok = await _service.UpdateAsync(id, @event);
+            if (!ok) return NotFound();
             return NoContent();
         }
 
         // POST: api/Events
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Event>> PostEvent(Event @event)
         {
-            _context.Event.Add(@event);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetEvent", new { id = @event.Id }, @event);
+            var created = await _service.CreateAsync(@event);
+            return CreatedAtAction(nameof(GetEvent), new { id = created.Id }, created);
         }
 
         // DELETE: api/Events/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEvent(int id)
         {
-            var @event = await _context.Event.FindAsync(id);
-            if (@event == null)
-            {
-                return NotFound();
-            }
-
-            _context.Event.Remove(@event);
-            await _context.SaveChangesAsync();
-
+            var ok = await _service.DeleteAsync(id);
+            if (!ok) return NotFound();
             return NoContent();
-        }
-
-        private bool EventExists(int id)
-        {
-            return _context.Event.Any(e => e.Id == id);
         }
     }
 }

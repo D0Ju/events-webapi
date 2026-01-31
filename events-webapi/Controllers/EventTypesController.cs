@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using events_webapi.Models;
+using events_webapi.Services;
 
 namespace events_webapi.Controllers
 {
@@ -13,95 +14,54 @@ namespace events_webapi.Controllers
     [ApiController]
     public class EventTypesController : ControllerBase
     {
-        private readonly AppdbContext _context;
+        private readonly IEventTypeApiService _service;
 
-        public EventTypesController(AppdbContext context)
+        public EventTypesController(IEventTypeApiService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/EventTypes
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EventType>>> GetEventType()
         {
-            return await _context.EventType.ToListAsync();
+            var list = await _service.GetAllAsync();
+            return Ok(list);
         }
 
         // GET: api/EventTypes/5
         [HttpGet("{id}")]
         public async Task<ActionResult<EventType>> GetEventType(int id)
         {
-            var eventType = await _context.EventType.FindAsync(id);
-
-            if (eventType == null)
-            {
-                return NotFound();
-            }
-
-            return eventType;
+            var et = await _service.GetByIdAsync(id);
+            if (et == null) return NotFound();
+            return Ok(et);
         }
 
         // PUT: api/EventTypes/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEventType(int id, EventType eventType)
         {
-            if (id != eventType.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(eventType).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!EventTypeExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
+            var ok = await _service.UpdateAsync(id, eventType);
+            if (!ok) return NotFound();
             return NoContent();
         }
 
         // POST: api/EventTypes
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<EventType>> PostEventType(EventType eventType)
         {
-            _context.EventType.Add(eventType);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetEventType", new { id = eventType.Id }, eventType);
+            var created = await _service.CreateAsync(eventType);
+            return CreatedAtAction(nameof(GetEventType), new { id = created.Id }, created);
         }
 
         // DELETE: api/EventTypes/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEventType(int id)
         {
-            var eventType = await _context.EventType.FindAsync(id);
-            if (eventType == null)
-            {
-                return NotFound();
-            }
-
-            _context.EventType.Remove(eventType);
-            await _context.SaveChangesAsync();
-
+            var ok = await _service.DeleteAsync(id);
+            if (!ok) return NotFound();
             return NoContent();
-        }
-
-        private bool EventTypeExists(int id)
-        {
-            return _context.EventType.Any(e => e.Id == id);
         }
     }
 }
