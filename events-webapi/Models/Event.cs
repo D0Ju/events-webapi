@@ -22,10 +22,14 @@ public class Event
     public decimal Cijena { get; set; }
     public string Opis { get; set; } = string.Empty;
     public bool Aktivan { get; set; }
+
     public int VrstaId { get; set; }
+    public int UserId { get; set; }
 
     // Navigation property
     [ForeignKey("VrstaId")]
     [BindNever]
-    public EventType? EventType { get; set; }
+    public EventType? Vrsta { get; set; }
+
+    public User? User { get; set; } 
 }

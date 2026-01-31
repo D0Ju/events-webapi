@@ -1,6 +1,6 @@
 using events_webapi.Models;
 using Microsoft.EntityFrameworkCore;
-
+using events_webapi.Data;
 namespace events_webapi.Services
 {
     public class EventTypeApiService : IEventTypeApiService

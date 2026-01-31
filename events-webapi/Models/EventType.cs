@@ -6,4 +6,6 @@ public class EventType
     public string Naziv { get; set; } = string.Empty;
     public string Opis { get; set; } = string.Empty;
     public int MinimalnoPolaznika { get; set; }
+
+    public ICollection<Event> Events { get; set; } = new List<Event>();
 }

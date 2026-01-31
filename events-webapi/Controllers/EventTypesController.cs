@@ -7,11 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using events_webapi.Models;
 using events_webapi.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace events_webapi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class EventTypesController : ControllerBase
     {
         private readonly IEventTypeApiService _service;
