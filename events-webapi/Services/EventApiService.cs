@@ -105,6 +105,7 @@ namespace events_webapi.Services
         }
 
         public async Task<IEnumerable<Event>> FilterAsync(
+            int userId,
             string? naziv,
             string? lokacija,
             DateTime? datumOd,
@@ -113,6 +114,7 @@ namespace events_webapi.Services
             bool? aktivan)
         {
             var query = _context.Event
+                .Where(e => e.UserId == userId)
                 .Include(e => e.Vrsta)
                 .AsQueryable();
 

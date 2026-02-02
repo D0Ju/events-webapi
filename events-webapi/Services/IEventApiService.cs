@@ -13,6 +13,7 @@ namespace events_webapi.Services
 
         // Filter method
         Task<IEnumerable<Event>> FilterAsync(
+            int userId,
             string? naziv,
             string? lokacija,
             DateTime? datumOd,

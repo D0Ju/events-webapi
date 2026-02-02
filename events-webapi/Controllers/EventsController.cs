@@ -91,7 +91,7 @@ public class EventsController : ControllerBase
         return success ? NoContent() : NotFound();
     }
 
-    [HttpPost("filter")]
+    [HttpGet("filter")]
     public async Task<ActionResult<IEnumerable<Event>>> FilterEvents(
         [FromQuery] string? naziv,
         [FromQuery] string? lokacija,
@@ -100,7 +100,8 @@ public class EventsController : ControllerBase
         [FromQuery] int? vrstaId,
         [FromQuery] bool? aktivan)
     {
-        var events = await _service.FilterAsync(naziv, lokacija, datumOd, datumDo, vrstaId, aktivan);
+        var userId = GetUserId();
+        var events = await _service.FilterAsync(userId, naziv, lokacija, datumOd, datumDo, vrstaId, aktivan);
         return Ok(events);
     }
 }
